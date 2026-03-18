@@ -196,14 +196,10 @@ function updateChord(play = true) {
   // Update piano
   keyboard.highlightNotes(midiNotes, rootMidi);
 
-  // Compute total voice count for gain scaling
   const products = getDistortionProducts();
-  const productFreqs = products.map(p => p.freq).filter(f => f >= 20 && f <= 20000);
-  const totalVoices = midiNotes.length + productFreqs.length;
 
   // Play chord first (stopAll clears previous sounds)
   if (play) {
-    audio.setExpectedVoices(totalVoices);
     const chordGain = parseInt(chordVolume.value) / 100;
     audio.playChord(midiNotes, 2.0, chordGain);
   }
@@ -278,7 +274,7 @@ function updateDistortionProducts(play = false, products = null) {
 
   // Only play when requested
   if (play && products.length > 0) {
-    const freqs = products.map(p => p.freq);
+    const freqs = products.map(p => p.freq).filter(f => f >= 20 && f <= 20000);
     const gainMul = parseInt(distortionVolume.value) / 100;
     const delay = delayToggle.checked ? 0.3 : 0;
     audio.playFrequencies(freqs, gainMul, delay);

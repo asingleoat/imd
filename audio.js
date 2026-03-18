@@ -1,6 +1,31 @@
 // audio.js — Web Audio synthesis engine
 // Uses the Tuning module for MIDI→Hz conversion.
 
+// Compute peak amplitude of summed sinusoids over a short sample window.
+// Returns a gain multiplier that normalises the peak to targetPeak.
+function computePeakGain(freqs, targetPeak = 0.8) {
+  if (freqs.length === 0) return 1.0;
+
+  // Sample enough to cover at least 2 periods of the lowest frequency
+  const minFreq = Math.min(...freqs);
+  const sampleRate = 44100;
+  const sampleCount = Math.min(Math.ceil(sampleRate * 100 / minFreq), 131072);
+
+  let peak = 0;
+  for (let i = 0; i < sampleCount; i++) {
+    const t = i / sampleRate;
+    let sum = 0;
+    for (const f of freqs) {
+      sum += Math.sin(2 * Math.PI * f * t);
+    }
+    const abs = Math.abs(sum);
+    if (abs > peak) peak = abs;
+  }
+
+  if (peak < 0.001) return 1.0;
+  return targetPeak / peak;
+}
+
 export class AudioEngine {
   constructor(tuning) {
     this._tuning = tuning;
@@ -8,7 +33,6 @@ export class AudioEngine {
     this._activeNodes = [];
     this._masterGain = null;
     this._compressor = null;
-    this._totalVoiceCount = 0; // tracks total polyphony across all calls
   }
 
   _ensureContext() {
@@ -18,26 +42,20 @@ export class AudioEngine {
     }
     this._ctx = new AudioContext();
     this._compressor = this._ctx.createDynamicsCompressor();
-    this._compressor.threshold.value = -18;
-    this._compressor.knee.value = 12;
+    this._compressor.threshold.value = -6;
+    this._compressor.knee.value = 6;
     this._compressor.ratio.value = 12;
-    this._compressor.attack.value = 0.003;
+    this._compressor.attack.value = 0.002;
     this._compressor.release.value = 0.1;
     this._compressor.connect(this._ctx.destination);
 
     this._masterGain = this._ctx.createGain();
-    this._masterGain.gain.value = 0.35;
+    this._masterGain.gain.value = 0.5;
     this._masterGain.connect(this._compressor);
   }
 
   setTuning(tuning) {
     this._tuning = tuning;
-  }
-
-  // Inform the engine how many total voices will play (chord + products)
-  // so per-note gain can be scaled globally. Call before playChord/playFrequencies.
-  setExpectedVoices(count) {
-    this._totalVoiceCount = count;
   }
 
   playChord(midiNotes, duration = 2.0, gainMul = 1.0) {
@@ -49,10 +67,17 @@ export class AudioEngine {
 
   // Play arbitrary frequencies with a gain multiplier and start offset.
   // Does NOT call stopAll — layers on top of whatever is already playing.
-  // Uses sine waves for cleaner mixing at high polyphony.
   playFrequencies(freqs, gainMul = 1.0, startOffset = 0, duration = 2.0) {
     this._ensureContext();
     this._playFreqs(freqs, gainMul, startOffset, duration, 'sine');
+  }
+
+  // Precompute normalised gain for a combined set of frequencies.
+  // Call with all freqs that will sound together (chord + products).
+  // Returns the peak gain factor to pass as gainMul, or use via setExpectedGain.
+  computeGain(allFreqs) {
+    const audible = allFreqs.filter(f => f >= 20 && f <= 20000);
+    return computePeakGain(audible);
   }
 
   _playFreqs(freqs, gainMul, startOffset, duration, waveform) {
@@ -63,15 +88,14 @@ export class AudioEngine {
     const release = 0.4;
     const sustainEnd = now + duration - release;
 
-    // Scale per-note gain by total expected polyphony
-    const totalVoices = Math.max(freqs.length, this._totalVoiceCount);
-    const noteGain = Math.min(1.0, 2.0 / Math.sqrt(totalVoices)) * gainMul;
+    const audible = freqs.filter(f => f >= 20 && f <= 20000);
+    // Compute peak-normalised per-note gain
+    const peakGain = computePeakGain(audible);
+    const noteGain = peakGain * gainMul;
 
     const useDualOsc = waveform === 'sawtooth';
 
-    for (const freq of freqs) {
-      if (freq < 20 || freq > 20000) continue;
-
+    for (const freq of audible) {
       const osc1 = this._ctx.createOscillator();
       osc1.type = waveform;
       osc1.frequency.value = freq;
@@ -131,6 +155,5 @@ export class AudioEngine {
       }
     }
     this._activeNodes = [];
-    this._totalVoiceCount = 0;
   }
 }
