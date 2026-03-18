@@ -1,6 +1,6 @@
 // app.js — Orchestrator: wires UI controls to chord/voicing/audio/piano modules
 
-import { equalTemperament } from './tuning.js';
+import { equalTemperament, justIntonation } from './tuning.js';
 import { CHORD_TYPES, CATEGORIES, chordsByCategory } from './chords.js';
 import { availableVoicings, applyVoicing } from './voicings.js';
 import { AudioEngine } from './audio.js';
@@ -15,7 +15,7 @@ let currentVoicing = 'Root position';
 let currentMidiNotes = [];
 
 // --- Init modules ---
-const tuning = equalTemperament(440);
+let tuning = equalTemperament(440);
 const audio = new AudioEngine(tuning);
 const keyboard = new PianoKeyboard(document.getElementById('keyboard'));
 const productsKeyboard = new PianoKeyboard(document.getElementById('keyboard-products'));
@@ -95,13 +95,29 @@ function refreshVoicings() {
   }
 }
 
+// --- Tuning ---
+const tuningSelect = document.getElementById('tuning-select');
+
+let tuningRoot = 60; // independent of played chord root
+
+function updateTuning() {
+  if (tuningSelect.value === 'just') {
+    tuning = justIntonation(tuningRoot);
+  } else {
+    tuning = equalTemperament(440);
+  }
+  audio.setTuning(tuning);
+  const rootName = ROOT_NOTES.find(r => r.midi % 12 === tuningRoot % 12)?.name.split('/')[0] || '?';
+  document.getElementById('tuning-info').textContent =
+    tuningSelect.value === 'just' ? `Just intonation · key of ${rootName}` : '12-TET · A4 = 440 Hz';
+}
+
 // --- Compute and display current chord ---
 function updateChord(play = true) {
   const chord = CHORD_TYPES.find(c => c.symbol === currentChordSymbol);
   if (!chord) return;
 
-  const octave = parseInt(octaveSelect.value);
-  const rootMidi = (currentRoot % 12) + (octave + 1) * 12; // MIDI: C4 = 60 = (4+1)*12
+  const rootMidi = currentRoot;
 
   const midiNotes = applyVoicing(chord.intervals, rootMidi, currentVoicing);
   currentMidiNotes = midiNotes;
@@ -251,21 +267,27 @@ function updateSignature() {
   const bottomFreq = deduped[0];
   bottomEl.textContent = deduped.map(f => ratioString(f, bottomFreq)).join('   ');
 
-  // Root-referred signature
-  const octave = parseInt(octaveSelect.value);
-  const rootMidi = (currentRoot % 12) + (octave + 1) * 12;
-  const rootFreq = tuning.noteFrequency(rootMidi);
+  // Root-referred signature (root = the played chord root)
+  const rootFreq = tuning.noteFrequency(currentRoot);
   const rootRatios = deduped.map(f => ratioString(f, rootFreq));
   rootEl.textContent = rootRatios.join('   ');
 }
 
 // --- Event listeners ---
+tuningSelect.addEventListener('change', () => {
+  updateTuning();
+  updateChord();
+});
+
 rootSelect.addEventListener('change', () => {
-  currentRoot = parseInt(rootSelect.value);
+  tuningRoot = parseInt(rootSelect.value);
+  currentRoot = (tuningRoot % 12) + (parseInt(octaveSelect.value) + 1) * 12;
+  updateTuning();
   updateChord();
 });
 
 octaveSelect.addEventListener('change', () => {
+  currentRoot = (tuningRoot % 12) + (parseInt(octaveSelect.value) + 1) * 12;
   updateChord();
 });
 
@@ -302,14 +324,13 @@ centsThresholdSlider.addEventListener('input', () => {
   updateSignature();
 });
 
-// Click a key to set it as the new root and play the chord
+// Click a key to play the current chord from that note (tuning unchanged)
 keyboard.onNoteClick((midi) => {
   currentRoot = midi;
-  rootSelect.value = ROOT_NOTES.find(r => r.midi % 12 === midi % 12)?.midi ?? currentRoot;
-  octaveSelect.value = Math.floor(midi / 12) - 1;
   updateChord(true);
 });
 
 // --- Initial render ---
+updateTuning();
 refreshVoicings();
 updateChord(false); // highlight but don't auto-play on load
