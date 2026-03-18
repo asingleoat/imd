@@ -1,0 +1,287 @@
+/* style.css — Piano keyboard and UI styling */
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+  background: #1a1a2e;
+  color: #e0e0e0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-height: 100vh;
+  padding: 2rem 1rem;
+}
+
+h1 {
+  font-size: 1.4rem;
+  font-weight: 300;
+  letter-spacing: 0.08em;
+  margin-bottom: 1.5rem;
+  color: #a0a0c0;
+}
+
+/* --- Controls --- */
+
+#controls {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+  justify-content: center;
+  margin-bottom: 2rem;
+  max-width: 900px;
+}
+
+.control-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.control-group label {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: #888;
+}
+
+select, button {
+  background: #2a2a4a;
+  color: #e0e0e0;
+  border: 1px solid #444;
+  border-radius: 4px;
+  padding: 0.5rem 0.8rem;
+  font-size: 0.9rem;
+  cursor: pointer;
+  outline: none;
+}
+
+select:focus, button:focus {
+  border-color: #6c8cbf;
+}
+
+button {
+  background: #3a3a6a;
+  font-weight: 500;
+  padding: 0.5rem 1.5rem;
+  transition: background 0.15s;
+}
+
+button:hover {
+  background: #4a4a8a;
+}
+
+button:active {
+  background: #5a5aaa;
+}
+
+/* --- Distortion toggles --- */
+
+#distortion-controls {
+  display: flex;
+  gap: 1.2rem;
+  justify-content: center;
+  margin-bottom: 1.5rem;
+}
+
+.toggle {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.8rem;
+  color: #aaa;
+  cursor: pointer;
+}
+
+.toggle input[type="checkbox"] {
+  accent-color: #6c8cbf;
+  width: 1rem;
+  height: 1rem;
+  cursor: pointer;
+}
+
+.toggle input[type="range"] {
+  accent-color: #6c8cbf;
+  width: 5rem;
+  cursor: pointer;
+}
+
+#distortion-volume-label {
+  min-width: 2.5em;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+#chord-display {
+  font-size: 1.3rem;
+  font-weight: 500;
+  color: #c0c0e0;
+  min-height: 2rem;
+  margin-bottom: 1rem;
+  text-align: center;
+}
+
+#notes-display {
+  font-size: 0.8rem;
+  color: #888;
+  min-height: 1.2rem;
+  margin-bottom: 1.5rem;
+  text-align: center;
+  letter-spacing: 0.05em;
+}
+
+/* --- Piano --- */
+
+#keyboard {
+  position: relative;
+  width: 100%;
+  max-width: 900px;
+  height: 180px;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.piano {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+.piano-key {
+  position: absolute;
+  top: 0;
+  border-radius: 0 0 4px 4px;
+  cursor: pointer;
+  transition: background 0.08s;
+}
+
+.white-key {
+  height: 100%;
+  background: linear-gradient(to bottom, #f8f8f8, #e8e8e8);
+  border: 1px solid #bbb;
+  z-index: 1;
+}
+
+.white-key:hover {
+  background: linear-gradient(to bottom, #fff, #f0f0f0);
+}
+
+.white-key.highlighted {
+  background: linear-gradient(to bottom, #6ca0dc, #4a80bc);
+  border-color: #4a80bc;
+}
+
+.white-key.highlighted.root {
+  background: linear-gradient(to bottom, #e08050, #c06030);
+  border-color: #c06030;
+}
+
+.black-key {
+  height: 62%;
+  background: linear-gradient(to bottom, #333, #111);
+  border: 1px solid #000;
+  z-index: 2;
+}
+
+.black-key:hover {
+  background: linear-gradient(to bottom, #444, #222);
+}
+
+.black-key.highlighted {
+  background: linear-gradient(to bottom, #5080b0, #305890);
+  border-color: #305890;
+}
+
+.black-key.highlighted.root {
+  background: linear-gradient(to bottom, #c06030, #a04020);
+  border-color: #a04020;
+}
+
+.key-label {
+  position: absolute;
+  bottom: 6px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 0.6rem;
+  color: #999;
+  pointer-events: none;
+}
+
+/* --- Products keyboard --- */
+
+#products-label {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: #666;
+  margin-top: 1.5rem;
+  margin-bottom: 0.4rem;
+  text-align: center;
+}
+
+#keyboard-products {
+  position: relative;
+  width: 100%;
+  max-width: 900px;
+  height: 130px;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+/* Harmonic products — purple */
+#keyboard-products .white-key.kind-harmonic {
+  background: linear-gradient(to bottom, #9060c0, #7040a0);
+  border-color: #7040a0;
+}
+#keyboard-products .black-key.kind-harmonic {
+  background: linear-gradient(to bottom, #7a4eaa, #5a2e8a);
+  border-color: #5a2e8a;
+}
+
+/* Sum (IMD) products — teal */
+#keyboard-products .white-key.kind-sum {
+  background: linear-gradient(to bottom, #40a0a0, #208080);
+  border-color: #208080;
+}
+#keyboard-products .black-key.kind-sum {
+  background: linear-gradient(to bottom, #308a8a, #106a6a);
+  border-color: #106a6a;
+}
+
+/* Difference (IMD) products — amber */
+#keyboard-products .white-key.kind-difference {
+  background: linear-gradient(to bottom, #c0a040, #a08020);
+  border-color: #a08020;
+}
+#keyboard-products .black-key.kind-difference {
+  background: linear-gradient(to bottom, #aa8a30, #8a6a10);
+  border-color: #8a6a10;
+}
+
+.cent-badge {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 0.55rem;
+  font-weight: 600;
+  color: #fff;
+  background: rgba(0, 0, 0, 0.5);
+  padding: 1px 3px;
+  border-radius: 2px;
+  pointer-events: none;
+  white-space: nowrap;
+  z-index: 3;
+}
+
+.black-key .cent-badge {
+  top: 40%;
+}
+
+/* --- Tuning --- */
+
+#tuning-info {
+  font-size: 0.7rem;
+  color: #666;
+  margin-top: 1.5rem;
+}

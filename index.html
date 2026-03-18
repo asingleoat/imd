@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Interactive Music Theory Demo</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <h1>Interactive Music Theory Demo</h1>
+
+  <div id="controls">
+    <div class="control-group">
+      <label for="root-select">Root</label>
+      <select id="root-select"></select>
+    </div>
+    <div class="control-group">
+      <label for="octave-select">Octave</label>
+      <select id="octave-select"></select>
+    </div>
+    <div class="control-group">
+      <label for="chord-select">Chord</label>
+      <select id="chord-select"></select>
+    </div>
+    <div class="control-group">
+      <label for="voicing-select">Voicing</label>
+      <select id="voicing-select"></select>
+    </div>
+    <div class="control-group">
+      <label>&nbsp;</label>
+      <button id="play-btn">Play</button>
+    </div>
+  </div>
+
+  <div id="distortion-controls">
+    <label class="toggle">
+      <input type="checkbox" id="harmonic-toggle">
+      <span>Harmonics</span>
+    </label>
+    <label class="toggle">
+      <input type="checkbox" id="imd-toggle">
+      <span>Intermodulation</span>
+    </label>
+    <label class="toggle">
+      <input type="checkbox" id="delay-toggle" checked>
+      <span>Delay</span>
+    </label>
+    <label class="toggle">
+      <span>Volume</span>
+      <input type="range" id="distortion-volume" min="0" max="200" value="60" step="5">
+      <span id="distortion-volume-label">60%</span>
+    </label>
+  </div>
+
+  <div id="chord-display"></div>
+  <div id="notes-display"></div>
+  <div id="keyboard"></div>
+
+  <div id="products-label">Distortion Products</div>
+  <div id="keyboard-products"></div>
+
+  <div id="tuning-info">12-TET · A4 = 440 Hz</div>
+
+  <script type="module" src="app.js"></script>
+</body>
+</html>
