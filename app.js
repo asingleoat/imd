@@ -240,9 +240,26 @@ function ratioString(freq, base) {
   return `${best.num}/${best.den}`;
 }
 
+// Nearest note name for an arbitrary frequency
+function freqToNoteName(freq, a4 = 440) {
+  const midi = Math.round(69 + 12 * Math.log2(freq / a4));
+  return midiToNoteName(midi);
+}
+
+function renderSigCells(container, texts) {
+  container.innerHTML = '';
+  for (const t of texts) {
+    const span = document.createElement('span');
+    span.className = 'sig-cell';
+    span.textContent = t;
+    container.appendChild(span);
+  }
+}
+
 function updateSignature() {
   const bottomEl = document.getElementById('sig-bottom');
   const rootEl = document.getElementById('sig-root');
+  const namesEl = document.getElementById('sig-names');
 
   // Collect all frequencies: chord notes + any active distortion products
   const chordFreqs = currentMidiNotes.map(m => tuning.noteFrequency(m));
@@ -251,8 +268,9 @@ function updateSignature() {
 
   const allFreqs = [...chordFreqs, ...productFreqs].sort((a, b) => a - b);
   if (allFreqs.length === 0) {
-    bottomEl.textContent = '';
-    rootEl.textContent = '';
+    renderSigCells(bottomEl, []);
+    renderSigCells(rootEl, []);
+    renderSigCells(namesEl, []);
     return;
   }
 
@@ -263,14 +281,17 @@ function updateSignature() {
     if (Math.abs(cents) > 1) deduped.push(allFreqs[i]);
   }
 
+  const noteNames = deduped.map(f => freqToNoteName(f));
+
   // Bottom-referred signature
   const bottomFreq = deduped[0];
-  bottomEl.textContent = deduped.map(f => ratioString(f, bottomFreq)).join('   ');
+  renderSigCells(bottomEl, deduped.map(f => ratioString(f, bottomFreq)));
 
   // Root-referred signature (root = the played chord root)
   const rootFreq = tuning.noteFrequency(currentRoot);
   const rootRatios = deduped.map(f => ratioString(f, rootFreq));
-  rootEl.textContent = rootRatios.join('   ');
+  renderSigCells(rootEl, rootRatios);
+  renderSigCells(namesEl, noteNames);
 
   // Identify chord function from root-referred intervals
   const chordNameEl = document.getElementById('sig-chord-name');

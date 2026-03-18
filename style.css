@@ -374,8 +374,13 @@ button:active {
   color: #b0b0d0;
   margin-top: 1.5rem;
   text-align: center;
-  letter-spacing: 0.05em;
-  line-height: 1.6;
+}
+
+.sig-row {
+  display: flex;
+  justify-content: center;
+  align-items: baseline;
+  line-height: 1.4;
 }
 
 .sig-label {
@@ -383,6 +388,26 @@ button:active {
   font-size: 0.7rem;
   text-transform: uppercase;
   letter-spacing: 0.1em;
+  width: 6em;
+  text-align: right;
+  flex-shrink: 0;
+}
+
+.sig-cells {
+  display: flex;
+  gap: 0;
+}
+
+.sig-cells .sig-cell {
+  min-width: 4em;
+  text-align: center;
+}
+
+.sig-names {
+  color: #888;
+  font-size: 0.75rem;
+  line-height: 1.2;
+  margin-bottom: 0.4rem;
 }
 
 #sig-chord-name {
