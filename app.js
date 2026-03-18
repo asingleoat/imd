@@ -114,14 +114,20 @@ function updateChord(play = true) {
   // Update piano
   keyboard.highlightNotes(midiNotes, rootMidi);
 
+  // Compute total voice count for gain scaling
+  const products = getDistortionProducts();
+  const productFreqs = products.map(p => p.freq).filter(f => f >= 20 && f <= 20000);
+  const totalVoices = midiNotes.length + productFreqs.length;
+
   // Play chord first (stopAll clears previous sounds)
   if (play) {
+    audio.setExpectedVoices(totalVoices);
     const chordGain = parseInt(chordVolume.value) / 100;
     audio.playChord(midiNotes, 2.0, chordGain);
   }
 
   // Then layer distortion products on top
-  updateDistortionProducts(play);
+  updateDistortionProducts(play, products);
 
   // Update rational signature
   updateSignature();
@@ -178,8 +184,8 @@ function getDistortionProducts() {
   return [...seen.values()];
 }
 
-function updateDistortionProducts(play = false) {
-  const products = getDistortionProducts();
+function updateDistortionProducts(play = false, products = null) {
+  if (!products) products = getDistortionProducts();
 
   // Always update visualization
   if (products.length > 0) {

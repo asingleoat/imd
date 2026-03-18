@@ -162,7 +162,7 @@ export class PianoKeyboard {
 
       // Opacity based on order: order 0 = full, higher = more transparent
       if (minOrder !== Infinity && minOrder > 0) {
-        el.style.opacity = Math.max(0.25, 1 - minOrder * 0.15);
+        el.style.opacity = Math.max(0.15, 1 - minOrder * 0.3);
       }
 
       // Deduplicate cent values for the badge
