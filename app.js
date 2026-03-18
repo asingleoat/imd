@@ -1,7 +1,7 @@
 // app.js — Orchestrator: wires UI controls to chord/voicing/audio/piano modules
 
 import { equalTemperament, justIntonation } from './tuning.js';
-import { CHORD_TYPES, CATEGORIES, chordsByCategory } from './chords.js';
+import { CHORD_TYPES, CATEGORIES, chordsByCategory, identifyChord } from './chords.js';
 import { availableVoicings, applyVoicing } from './voicings.js';
 import { AudioEngine } from './audio.js';
 import { PianoKeyboard, midiToNoteName } from './piano.js';
@@ -271,6 +271,28 @@ function updateSignature() {
   const rootFreq = tuning.noteFrequency(currentRoot);
   const rootRatios = deduped.map(f => ratioString(f, rootFreq));
   rootEl.textContent = rootRatios.join('   ');
+
+  // Identify chord function from root-referred intervals
+  const chordNameEl = document.getElementById('sig-chord-name');
+  const semitones = deduped.map(f => {
+    const cents = 1200 * Math.log2(f / rootFreq);
+    return Math.round(cents / 100);
+  });
+  const identified = identifyChord(semitones);
+  if (identified) {
+    const rootName = ROOT_NOTES.find(r => r.midi % 12 === currentRoot % 12)?.name.split('/')[0] || '?';
+    let label = `${rootName}${identified.symbol === 'maj' ? '' : identified.symbol}`;
+    if (identified.extra.length > 0) {
+      const extraNames = identified.extra.map(pc => {
+        const INTERVAL_NAMES = ['1', '♭2', '2', '♭3', '3', '4', '♯4', '5', '♭6', '6', '♭7', '7'];
+        return INTERVAL_NAMES[pc];
+      });
+      label += ` (add ${extraNames.join(', ')})`;
+    }
+    chordNameEl.textContent = label;
+  } else {
+    chordNameEl.textContent = '';
+  }
 }
 
 // --- Event listeners ---

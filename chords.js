@@ -99,3 +99,46 @@ export function chordsByCategory() {
 export function findChord(symbol) {
   return CHORD_TYPES.find(c => c.symbol === symbol) || null;
 }
+
+// Identify a chord from a set of semitone intervals from root.
+// intervals: array of semitones (not necessarily starting with 0).
+// Returns { symbol, name, category, extra } where extra is leftover intervals not in the match,
+// or null if no match.
+export function identifyChord(intervals) {
+  // Normalise: ensure 0 is present, reduce to unique pitch classes, sort
+  const pcs = [...new Set(intervals.map(i => ((i % 12) + 12) % 12))].sort((a, b) => a - b);
+  if (pcs.length === 0) return null;
+
+  // Try to match against all chord types, preferring the longest (most specific) match
+  let bestMatch = null;
+  let bestSize = 0;
+  let bestExtra = Infinity;
+
+  for (const chord of CHORD_TYPES) {
+    const chordPcs = [...new Set(chord.intervals.map(i => ((i % 12) + 12) % 12))].sort((a, b) => a - b);
+
+    // Check if all chord pitch classes are present in our set
+    const allPresent = chordPcs.every(pc => pcs.includes(pc));
+    if (!allPresent) continue;
+
+    const extraCount = pcs.length - chordPcs.length;
+    // Prefer: largest chord that matches, then fewest extra notes
+    if (chordPcs.length > bestSize || (chordPcs.length === bestSize && extraCount < bestExtra)) {
+      bestMatch = chord;
+      bestSize = chordPcs.length;
+      bestExtra = extraCount;
+    }
+  }
+
+  if (!bestMatch) return null;
+
+  const matchedPcs = new Set(bestMatch.intervals.map(i => ((i % 12) + 12) % 12));
+  const extra = pcs.filter(pc => !matchedPcs.has(pc));
+
+  return {
+    symbol: bestMatch.symbol,
+    name: bestMatch.name,
+    category: bestMatch.category,
+    extra,
+  };
+}

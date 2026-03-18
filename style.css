@@ -385,6 +385,13 @@ button:active {
   letter-spacing: 0.1em;
 }
 
+#sig-chord-name {
+  font-size: 1rem;
+  color: #d0c0e0;
+  margin-top: 0.3rem;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+}
+
 /* --- Tuning --- */
 
 #tuning-info {
