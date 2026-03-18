@@ -13,7 +13,7 @@ const BLACK_OFFSETS = {
 };
 
 export class PianoKeyboard {
-  constructor(container, lowMidi = 48, highMidi = 95) {
+  constructor(container, lowMidi = 36, highMidi = 107) {
     this._container = container;
     this._low = lowMidi;
     this._high = highMidi;
@@ -125,32 +125,67 @@ export class PianoKeyboard {
   // a4: reference frequency for MIDI conversion (default 440)
   highlightFrequencies(entries, a4 = 440) {
     this.clearHighlight();
+
+    // Group entries by nearest MIDI key, octave-shifting into range if needed
+    const byKey = new Map(); // midi -> { kinds: Set, cents: [], octaveShifts: Set }
     for (const { freq, kind } of entries) {
       if (freq < 20 || freq > 20000) continue;
       const exactMidi = 69 + 12 * Math.log2(freq / a4);
-      const nearestMidi = Math.round(exactMidi);
+      let nearestMidi = Math.round(exactMidi);
       const cents = Math.round((exactMidi - nearestMidi) * 100);
 
-      const el = this._keys.get(nearestMidi);
-      if (!el) continue;
+      // Octave-shift into keyboard range if needed
+      let octaveShift = 0;
+      while (nearestMidi < this._low) { nearestMidi += 12; octaveShift++; }
+      while (nearestMidi > this._high) { nearestMidi -= 12; octaveShift--; }
 
-      el.classList.add('highlighted', `kind-${kind || 'default'}`);
+      if (!this._keys.has(nearestMidi)) continue;
 
-      // Add cent offset label
+      if (!byKey.has(nearestMidi)) {
+        byKey.set(nearestMidi, { kinds: new Set(), cents: [], octaveShifts: new Set() });
+      }
+      const entry = byKey.get(nearestMidi);
+      entry.kinds.add(kind || 'default');
+      entry.cents.push(cents);
+      if (octaveShift !== 0) entry.octaveShifts.add(octaveShift);
+    }
+
+    // Apply highlights
+    for (const [midi, { kinds, cents, octaveShifts }] of byKey) {
+      const el = this._keys.get(midi);
+      el.classList.add('highlighted');
+      if (octaveShifts.size > 0) el.classList.add('octave-shifted');
+      for (const k of kinds) {
+        el.classList.add(`kind-${k}`);
+      }
+
+      // Deduplicate cent values for the badge
+      const uniqueCents = [...new Set(cents)].sort((a, b) => a - b);
+      const centText = uniqueCents.map(c =>
+        c === 0 ? '0¢' : `${c > 0 ? '+' : ''}${c}¢`
+      ).join(' ');
+
+      // Octave shift indicator
+      let shiftText = '';
+      if (octaveShifts.size > 0) {
+        const shifts = [...octaveShifts].sort((a, b) => a - b);
+        shiftText = shifts.map(s => {
+          const abs = Math.abs(s);
+          const label = abs === 1 ? '8va' : `${abs * 8}va`;
+          return s > 0 ? `↓${label}` : `↑${label}`;
+        }).join(' ');
+      }
+
       const badge = document.createElement('span');
       badge.className = 'cent-badge';
-      if (cents === 0) {
-        badge.textContent = '0¢';
-      } else {
-        badge.textContent = `${cents > 0 ? '+' : ''}${cents}¢`;
-      }
+      badge.textContent = shiftText ? `${shiftText} ${centText}` : centText;
       el.appendChild(badge);
     }
   }
 
   clearHighlight() {
     for (const el of this._keys.values()) {
-      el.classList.remove('highlighted', 'root');
+      el.classList.remove('highlighted', 'root', 'kind-harmonic', 'kind-sum', 'kind-difference', 'octave-shifted');
       // Remove any cent badges
       el.querySelectorAll('.cent-badge').forEach(b => b.remove());
     }

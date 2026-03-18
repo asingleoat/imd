@@ -1,8 +1,8 @@
 // voicings.js — Transforms abstract interval sets into concrete MIDI note arrays.
 // All inputs/outputs are MIDI note numbers.
 
-const KEYBOARD_LOW = 48;  // C3
-const KEYBOARD_HIGH = 95; // B6
+const KEYBOARD_LOW = 36;  // C2
+const KEYBOARD_HIGH = 107; // B7
 
 // Clamp notes into the rendered keyboard range by octave shifting
 function clampToKeyboard(notes) {

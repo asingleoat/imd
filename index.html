@@ -34,6 +34,11 @@
 
   <div id="distortion-controls">
     <label class="toggle">
+      <span>Chord vol</span>
+      <input type="range" id="chord-volume" min="0" max="200" value="100" step="5">
+      <span id="chord-volume-label">100%</span>
+    </label>
+    <label class="toggle">
       <input type="checkbox" id="harmonic-toggle">
       <span>Harmonics</span>
     </label>
@@ -46,7 +51,7 @@
       <span>Delay</span>
     </label>
     <label class="toggle">
-      <span>Volume</span>
+      <span>Products vol</span>
       <input type="range" id="distortion-volume" min="0" max="200" value="60" step="5">
       <span id="distortion-volume-label">60%</span>
     </label>

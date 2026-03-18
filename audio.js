@@ -31,11 +31,11 @@ export class AudioEngine {
     this._tuning = tuning;
   }
 
-  playChord(midiNotes, duration = 2.0) {
+  playChord(midiNotes, duration = 2.0, gainMul = 1.0) {
     this._ensureContext();
     this.stopAll();
     const freqs = midiNotes.map(m => this._tuning.noteFrequency(m));
-    this._playFreqs(freqs, 1.0, 0, duration);
+    this._playFreqs(freqs, gainMul, 0, duration);
   }
 
   // Play arbitrary frequencies with a gain multiplier and start offset.

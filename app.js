@@ -47,7 +47,7 @@ rootSelect.value = currentRoot;
 
 // --- Populate octave selector ---
 const octaveSelect = document.getElementById('octave-select');
-for (let oct = 2; oct <= 5; oct++) {
+for (let oct = 2; oct <= 7; oct++) {
   const opt = document.createElement('option');
   opt.value = oct;
   opt.textContent = `Octave ${oct}`;
@@ -115,7 +115,8 @@ function updateChord(play = true) {
 
   // Play chord first (stopAll clears previous sounds)
   if (play) {
-    audio.playChord(midiNotes);
+    const chordGain = parseInt(chordVolume.value) / 100;
+    audio.playChord(midiNotes, 2.0, chordGain);
   }
 
   // Then layer distortion products on top
@@ -123,6 +124,8 @@ function updateChord(play = true) {
 }
 
 // --- Distortion ---
+const chordVolume = document.getElementById('chord-volume');
+const chordVolumeLabel = document.getElementById('chord-volume-label');
 const harmonicToggle = document.getElementById('harmonic-toggle');
 const imdToggle = document.getElementById('imd-toggle');
 const delayToggle = document.getElementById('delay-toggle');
@@ -191,6 +194,9 @@ document.getElementById('play-btn').addEventListener('click', () => {
   updateChord(true);
 });
 
+chordVolume.addEventListener('input', () => {
+  chordVolumeLabel.textContent = `${chordVolume.value}%`;
+});
 harmonicToggle.addEventListener('change', () => updateDistortionProducts());
 imdToggle.addEventListener('change', () => updateDistortionProducts());
 distortionVolume.addEventListener('input', () => {

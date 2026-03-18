@@ -11,6 +11,7 @@ export const CATEGORIES = [
   '13ths',
   'Altered dominants',
   'Quartal',
+  'Double stops',
   'Power',
 ];
 
@@ -68,6 +69,20 @@ export const CHORD_TYPES = [
   { symbol: 'Q4',      name: 'Quartal 4-note',      category: 'Quartal', intervals: [0, 5, 10, 15] },
   { symbol: 'Q5',      name: 'Quartal 5-note',      category: 'Quartal', intervals: [0, 5, 10, 15, 20] },
   { symbol: 'So What', name: 'So What (4ths + 3rd)', category: 'Quartal', intervals: [0, 5, 10, 15, 19] },
+
+  // --- Double stops ---
+  { symbol: 'm2',  name: 'Minor 2nd',     category: 'Double stops', intervals: [0, 1] },
+  { symbol: 'M2',  name: 'Major 2nd',     category: 'Double stops', intervals: [0, 2] },
+  { symbol: 'm3',  name: 'Minor 3rd',     category: 'Double stops', intervals: [0, 3] },
+  { symbol: 'M3',  name: 'Major 3rd',     category: 'Double stops', intervals: [0, 4] },
+  { symbol: 'P4',  name: 'Perfect 4th',   category: 'Double stops', intervals: [0, 5] },
+  { symbol: 'TT',  name: 'Tritone',       category: 'Double stops', intervals: [0, 6] },
+  { symbol: 'P5',  name: 'Perfect 5th',   category: 'Double stops', intervals: [0, 7] },
+  { symbol: 'm6',  name: 'Minor 6th',     category: 'Double stops', intervals: [0, 8] },
+  { symbol: 'M6',  name: 'Major 6th',     category: 'Double stops', intervals: [0, 9] },
+  { symbol: 'm7',  name: 'Minor 7th',     category: 'Double stops', intervals: [0, 10] },
+  { symbol: 'M7',  name: 'Major 7th',     category: 'Double stops', intervals: [0, 11] },
+  { symbol: 'P8',  name: 'Octave',        category: 'Double stops', intervals: [0, 12] },
 
   // --- Power ---
   { symbol: '5', name: 'Power Chord', category: 'Power', intervals: [0, 7] },

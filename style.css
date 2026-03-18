@@ -29,7 +29,7 @@ h1 {
   flex-wrap: wrap;
   justify-content: center;
   margin-bottom: 2rem;
-  max-width: 900px;
+  max-width: 1200px;
 }
 
 .control-group {
@@ -135,7 +135,7 @@ button:active {
 #keyboard {
   position: relative;
   width: 100%;
-  max-width: 900px;
+  max-width: 1200px;
   height: 180px;
   user-select: none;
   -webkit-user-select: none;
@@ -222,7 +222,7 @@ button:active {
 #keyboard-products {
   position: relative;
   width: 100%;
-  max-width: 900px;
+  max-width: 1200px;
   height: 130px;
   user-select: none;
   -webkit-user-select: none;
@@ -258,9 +258,94 @@ button:active {
   border-color: #8a6a10;
 }
 
-.cent-badge {
+/* Harmonic + Sum — purple/teal stripes */
+#keyboard-products .white-key.kind-harmonic.kind-sum {
+  background: repeating-linear-gradient(
+    -45deg,
+    #9060c0, #9060c0 4px, #40a0a0 4px, #40a0a0 8px
+  );
+  border-color: #508090;
+}
+#keyboard-products .black-key.kind-harmonic.kind-sum {
+  background: repeating-linear-gradient(
+    -45deg,
+    #7a4eaa, #7a4eaa 4px, #308a8a 4px, #308a8a 8px
+  );
+  border-color: #506070;
+}
+
+/* Harmonic + Difference — purple/amber stripes */
+#keyboard-products .white-key.kind-harmonic.kind-difference {
+  background: repeating-linear-gradient(
+    -45deg,
+    #9060c0, #9060c0 4px, #c0a040 4px, #c0a040 8px
+  );
+  border-color: #a08060;
+}
+#keyboard-products .black-key.kind-harmonic.kind-difference {
+  background: repeating-linear-gradient(
+    -45deg,
+    #7a4eaa, #7a4eaa 4px, #aa8a30 4px, #aa8a30 8px
+  );
+  border-color: #906050;
+}
+
+/* Sum + Difference — teal/amber stripes */
+#keyboard-products .white-key.kind-sum.kind-difference {
+  background: repeating-linear-gradient(
+    -45deg,
+    #40a0a0, #40a0a0 4px, #c0a040 4px, #c0a040 8px
+  );
+  border-color: #809060;
+}
+#keyboard-products .black-key.kind-sum.kind-difference {
+  background: repeating-linear-gradient(
+    -45deg,
+    #308a8a, #308a8a 4px, #aa8a30 4px, #aa8a30 8px
+  );
+  border-color: #6a7a40;
+}
+
+/* All three — purple/teal/amber tri-stripe */
+#keyboard-products .white-key.kind-harmonic.kind-sum.kind-difference {
+  background: repeating-linear-gradient(
+    -45deg,
+    #9060c0, #9060c0 3px, #40a0a0 3px, #40a0a0 6px, #c0a040 6px, #c0a040 9px
+  );
+  border-color: #807060;
+}
+#keyboard-products .black-key.kind-harmonic.kind-sum.kind-difference {
+  background: repeating-linear-gradient(
+    -45deg,
+    #7a4eaa, #7a4eaa 3px, #308a8a 3px, #308a8a 6px, #aa8a30 6px, #aa8a30 9px
+  );
+  border-color: #6a6050;
+}
+
+/* Octave-shifted keys get a dashed border */
+#keyboard-products .piano-key.octave-shifted {
+  border-style: dashed;
+  border-width: 2px;
+}
+
+.white-key .cent-badge {
   position: absolute;
-  top: 50%;
+  bottom: 8px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 0.55rem;
+  font-weight: 600;
+  color: #fff;
+  background: rgba(0, 0, 0, 0.6);
+  padding: 1px 3px;
+  border-radius: 2px;
+  pointer-events: none;
+  white-space: nowrap;
+}
+
+.black-key .cent-badge {
+  position: absolute;
+  top: 40%;
   left: 50%;
   transform: translate(-50%, -50%);
   font-size: 0.55rem;
@@ -272,10 +357,6 @@ button:active {
   pointer-events: none;
   white-space: nowrap;
   z-index: 3;
-}
-
-.black-key .cent-badge {
-  top: 40%;
 }
 
 /* --- Tuning --- */
