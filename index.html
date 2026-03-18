@@ -43,7 +43,7 @@
       <span>Harmonics</span>
     </label>
     <label class="toggle">
-      <input type="checkbox" id="imd-toggle">
+      <input type="checkbox" id="imd-toggle" checked>
       <span>Intermodulation</span>
     </label>
     <label class="toggle">
@@ -69,7 +69,17 @@
   <div id="products-label">Distortion Products</div>
   <div id="keyboard-products"></div>
 
-  <div id="rational-signature"></div>
+  <div id="signature-controls">
+    <label class="toggle">
+      <span>Tolerance</span>
+      <input type="range" id="cents-threshold" min="1" max="50" value="10" step="1">
+      <span id="cents-threshold-label">10¢</span>
+    </label>
+  </div>
+  <div id="rational-signature">
+    <div><span class="sig-label">from bass:</span> <span id="sig-bottom"></span></div>
+    <div><span class="sig-label">from root:</span> <span id="sig-root"></span></div>
+  </div>
   <div id="tuning-info">12-TET · A4 = 440 Hz</div>
 
   <script type="module" src="app.js"></script>

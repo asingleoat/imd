@@ -10,7 +10,7 @@ import { rationalApproximations } from './fraction.js';
 
 // --- State ---
 let currentRoot = 60; // C4
-let currentChordSymbol = 'maj7';
+let currentChordSymbol = 'P5';
 let currentVoicing = 'Root position';
 let currentMidiNotes = [];
 
@@ -204,10 +204,29 @@ function updateDistortionProducts(play = false, products = null) {
 }
 
 // --- Rational signature ---
-const CENTS_THRESHOLD = 5; // accept first approximation within this many cents
+const centsThresholdSlider = document.getElementById('cents-threshold');
+const centsThresholdLabel = document.getElementById('cents-threshold-label');
+
+function getCentsThreshold() {
+  return parseInt(centsThresholdSlider.value);
+}
+
+function ratioString(freq, base) {
+  const ratio = freq / base;
+  if (Math.abs(ratio - 1) < 1e-9) return '1/1';
+  const approxes = rationalApproximations(ratio);
+  for (const a of approxes) {
+    if (Math.abs(a.error) <= getCentsThreshold()) {
+      return `${a.num}/${a.den}`;
+    }
+  }
+  const best = approxes[approxes.length - 1];
+  return `${best.num}/${best.den}`;
+}
 
 function updateSignature() {
-  const el = document.getElementById('rational-signature');
+  const bottomEl = document.getElementById('sig-bottom');
+  const rootEl = document.getElementById('sig-root');
 
   // Collect all frequencies: chord notes + any active distortion products
   const chordFreqs = currentMidiNotes.map(m => tuning.noteFrequency(m));
@@ -215,7 +234,11 @@ function updateSignature() {
   const productFreqs = products.map(p => p.freq).filter(f => f >= 20 && f <= 20000);
 
   const allFreqs = [...chordFreqs, ...productFreqs].sort((a, b) => a - b);
-  if (allFreqs.length === 0) { el.textContent = ''; return; }
+  if (allFreqs.length === 0) {
+    bottomEl.textContent = '';
+    rootEl.textContent = '';
+    return;
+  }
 
   // Deduplicate frequencies that are very close (within 1 cent)
   const deduped = [allFreqs[0]];
@@ -224,24 +247,16 @@ function updateSignature() {
     if (Math.abs(cents) > 1) deduped.push(allFreqs[i]);
   }
 
-  const base = deduped[0];
-  const ratios = deduped.map(f => {
-    const ratio = f / base;
-    if (Math.abs(ratio - 1) < 1e-9) return '1/1';
+  // Bottom-referred signature
+  const bottomFreq = deduped[0];
+  bottomEl.textContent = deduped.map(f => ratioString(f, bottomFreq)).join('   ');
 
-    // Walk convergents, pick the first one within threshold
-    const approxes = rationalApproximations(ratio);
-    for (const a of approxes) {
-      if (Math.abs(a.error) <= CENTS_THRESHOLD) {
-        return `${a.num}/${a.den}`;
-      }
-    }
-    // Fallback: best available
-    const best = approxes[approxes.length - 1];
-    return `${best.num}/${best.den}`;
-  });
-
-  el.textContent = ratios.join('   ');
+  // Root-referred signature
+  const octave = parseInt(octaveSelect.value);
+  const rootMidi = (currentRoot % 12) + (octave + 1) * 12;
+  const rootFreq = tuning.noteFrequency(rootMidi);
+  const rootRatios = deduped.map(f => ratioString(f, rootFreq));
+  rootEl.textContent = rootRatios.join('   ');
 }
 
 // --- Event listeners ---
@@ -281,6 +296,10 @@ depthSlider.addEventListener('input', () => {
 });
 distortionVolume.addEventListener('input', () => {
   distortionVolumeLabel.textContent = `${distortionVolume.value}%`;
+});
+centsThresholdSlider.addEventListener('input', () => {
+  centsThresholdLabel.textContent = `${centsThresholdSlider.value}¢`;
+  updateSignature();
 });
 
 // Click a key to set it as the new root and play the chord
