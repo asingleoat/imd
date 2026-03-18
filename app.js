@@ -7,12 +7,14 @@ import { AudioEngine } from './audio.js';
 import { PianoKeyboard, midiToNoteName } from './piano.js';
 import { harmonic, intermodulation } from './distortion.js';
 import { rationalApproximations } from './fraction.js';
+import { SCALES, COMPLEXITIES, DEGREE_NAMES, diatonicChord } from './scales.js';
 
 // --- State ---
 let currentRoot = 60; // C4
 let currentChordSymbol = 'P5';
 let currentVoicing = 'Root position';
 let currentMidiNotes = [];
+let currentMode = 'chromatic';
 
 // --- Init modules ---
 let tuning = equalTemperament(440);
@@ -72,13 +74,64 @@ for (const cat of CATEGORIES) {
 }
 chordSelect.value = currentChordSymbol;
 
+// --- Populate diatonic selectors ---
+const modeSelect = document.getElementById('mode-select');
+const scaleSelect = document.getElementById('scale-select');
+const degreeSelect = document.getElementById('degree-select');
+const complexitySelect = document.getElementById('complexity-select');
+
+for (const [i, scale] of SCALES.entries()) {
+  const opt = document.createElement('option');
+  opt.value = i;
+  opt.textContent = scale.name;
+  scaleSelect.appendChild(opt);
+}
+
+for (const [i, name] of DEGREE_NAMES.entries()) {
+  const opt = document.createElement('option');
+  opt.value = i;
+  opt.textContent = name;
+  degreeSelect.appendChild(opt);
+}
+
+for (const [i, c] of COMPLEXITIES.entries()) {
+  const opt = document.createElement('option');
+  opt.value = i;
+  opt.textContent = c.name;
+  complexitySelect.appendChild(opt);
+}
+complexitySelect.value = COMPLEXITIES.findIndex(c => c.name === 'Triad');
+
+function setMode(mode) {
+  currentMode = mode;
+  modeSelect.value = mode;
+  for (const el of document.querySelectorAll('.chromatic-ctrl')) {
+    el.style.display = mode === 'chromatic' ? '' : 'none';
+  }
+  for (const el of document.querySelectorAll('.diatonic-ctrl')) {
+    el.style.display = mode === 'diatonic' ? '' : 'none';
+  }
+}
+
+// --- Get current intervals based on mode ---
+function getCurrentIntervals() {
+  if (currentMode === 'diatonic') {
+    const scale = SCALES[parseInt(scaleSelect.value)];
+    const degree = parseInt(degreeSelect.value);
+    const complexity = COMPLEXITIES[parseInt(complexitySelect.value)];
+    return diatonicChord(degree, scale, complexity);
+  } else {
+    const chord = CHORD_TYPES.find(c => c.symbol === currentChordSymbol);
+    return chord ? chord.intervals : [0];
+  }
+}
+
 // --- Populate voicing selector ---
 const voicingSelect = document.getElementById('voicing-select');
 
 function refreshVoicings() {
-  const chord = CHORD_TYPES.find(c => c.symbol === currentChordSymbol);
-  if (!chord) return;
-  const voicings = availableVoicings(chord.intervals);
+  const intervals = getCurrentIntervals();
+  const voicings = availableVoicings(intervals);
   voicingSelect.innerHTML = '';
   for (const v of voicings) {
     const opt = document.createElement('option');
@@ -86,7 +139,6 @@ function refreshVoicings() {
     opt.textContent = v;
     voicingSelect.appendChild(opt);
   }
-  // Keep current voicing if still available, else reset
   if (voicings.includes(currentVoicing)) {
     voicingSelect.value = currentVoicing;
   } else {
@@ -112,19 +164,33 @@ function updateTuning() {
     tuningSelect.value === 'just' ? `Just intonation · key of ${rootName}` : '12-TET · A4 = 440 Hz';
 }
 
+const SPACED_CATEGORIES = new Set(['Double stops', 'Power']);
+
+function formatChordName(rootName, chord) {
+  if (chord.symbol === 'maj') return rootName;
+  const sep = SPACED_CATEGORIES.has(chord.category) ? ' ' : '';
+  return `${rootName}${sep}${chord.symbol}`;
+}
+
 // --- Compute and display current chord ---
 function updateChord(play = true) {
-  const chord = CHORD_TYPES.find(c => c.symbol === currentChordSymbol);
-  if (!chord) return;
-
+  const intervals = getCurrentIntervals();
   const rootMidi = currentRoot;
 
-  const midiNotes = applyVoicing(chord.intervals, rootMidi, currentVoicing);
+  const midiNotes = applyVoicing(intervals, rootMidi, currentVoicing);
   currentMidiNotes = midiNotes;
 
   // Update displays
   const rootName = ROOT_NOTES.find(r => r.midi % 12 === currentRoot % 12)?.name.split('/')[0] || '?';
-  document.getElementById('chord-display').textContent = `${rootName}${chord.symbol === 'maj' ? '' : chord.symbol}`;
+  if (currentMode === 'chromatic') {
+    const chord = CHORD_TYPES.find(c => c.symbol === currentChordSymbol);
+    document.getElementById('chord-display').textContent = chord ? formatChordName(rootName, chord) : rootName;
+  } else {
+    const degree = DEGREE_NAMES[parseInt(degreeSelect.value)];
+    const identified = identifyChord(intervals);
+    const chordLabel = identified ? formatChordName(rootName, identified) : rootName;
+    document.getElementById('chord-display').textContent = `${chordLabel} (${degree})`;
+  }
   document.getElementById('notes-display').textContent = midiNotes.map(midiToNoteName).join('  ');
 
   // Update piano
@@ -302,7 +368,7 @@ function updateSignature() {
   const identified = identifyChord(semitones);
   if (identified) {
     const rootName = ROOT_NOTES.find(r => r.midi % 12 === currentRoot % 12)?.name.split('/')[0] || '?';
-    let label = `${rootName}${identified.symbol === 'maj' ? '' : identified.symbol}`;
+    let label = formatChordName(rootName, identified);
     if (identified.extra.length > 0) {
       const extraNames = identified.extra.map(pc => {
         const INTERVAL_NAMES = ['1', '♭2', '2', '♭3', '3', '4', '♯4', '5', '♭6', '6', '♭7', '7'];
@@ -334,8 +400,29 @@ octaveSelect.addEventListener('change', () => {
   updateChord();
 });
 
+modeSelect.addEventListener('change', () => {
+  setMode(modeSelect.value);
+  refreshVoicings();
+  updateChord();
+});
+
 chordSelect.addEventListener('change', () => {
   currentChordSymbol = chordSelect.value;
+  refreshVoicings();
+  updateChord();
+});
+
+scaleSelect.addEventListener('change', () => {
+  refreshVoicings();
+  updateChord();
+});
+
+degreeSelect.addEventListener('change', () => {
+  refreshVoicings();
+  updateChord();
+});
+
+complexitySelect.addEventListener('change', () => {
   refreshVoicings();
   updateChord();
 });
@@ -374,13 +461,45 @@ centsThresholdSlider.addEventListener('input', () => {
   updateSignature();
 });
 
-// Click a key to play the current chord from that note (tuning unchanged)
+// Click a key to play chord from that note
 keyboard.onNoteClick((midi) => {
-  currentRoot = midi;
+  if (currentMode === 'diatonic') {
+    // Snap to nearest scale degree
+    const scale = SCALES[parseInt(scaleSelect.value)];
+    const keyPc = tuningRoot % 12;
+    const notePc = ((midi % 12) - keyPc + 12) % 12;
+
+    // Find the closest scale degree
+    let bestDegree = 0;
+    let bestDist = Infinity;
+    for (let i = 0; i < scale.steps.length; i++) {
+      const dist = Math.min(
+        Math.abs(notePc - scale.steps[i]),
+        12 - Math.abs(notePc - scale.steps[i])
+      );
+      if (dist < bestDist) {
+        bestDist = dist;
+        bestDegree = i;
+      }
+    }
+
+    degreeSelect.value = bestDegree;
+    // Set root to the actual scale degree pitch
+    const degreePc = (keyPc + scale.steps[bestDegree]) % 12;
+    const octave = Math.floor(midi / 12);
+    currentRoot = octave * 12 + degreePc;
+    // Adjust octave if we snapped across the boundary
+    if (currentRoot > midi + 6) currentRoot -= 12;
+    if (currentRoot < midi - 6) currentRoot += 12;
+  } else {
+    currentRoot = midi;
+  }
+  refreshVoicings();
   updateChord(true);
 });
 
 // --- Initial render ---
+setMode('chromatic');
 updateTuning();
 refreshVoicings();
 updateChord(false); // highlight but don't auto-play on load

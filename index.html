@@ -26,9 +26,33 @@
       <select id="octave-select"></select>
     </div>
     <div class="control-group">
+      <label for="mode-select">Mode</label>
+      <select id="mode-select">
+        <option value="chromatic">Chromatic</option>
+        <option value="diatonic">Diatonic</option>
+      </select>
+    </div>
+
+    <!-- Chromatic controls -->
+    <div class="control-group chromatic-ctrl">
       <label for="chord-select">Chord</label>
       <select id="chord-select"></select>
     </div>
+
+    <!-- Diatonic controls -->
+    <div class="control-group diatonic-ctrl" style="display:none">
+      <label for="scale-select">Scale</label>
+      <select id="scale-select"></select>
+    </div>
+    <div class="control-group diatonic-ctrl" style="display:none">
+      <label for="degree-select">Degree</label>
+      <select id="degree-select"></select>
+    </div>
+    <div class="control-group diatonic-ctrl" style="display:none">
+      <label for="complexity-select">Complexity</label>
+      <select id="complexity-select"></select>
+    </div>
+
     <div class="control-group">
       <label for="voicing-select">Voicing</label>
       <select id="voicing-select"></select>
