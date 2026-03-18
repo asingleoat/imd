@@ -44,7 +44,7 @@ export class AudioEngine {
     this._ensureContext();
     this.stopAll();
     const freqs = midiNotes.map(m => this._tuning.noteFrequency(m));
-    this._playFreqs(freqs, gainMul, 0, duration, 'sawtooth');
+    this._playFreqs(freqs, gainMul, 0, duration, 'sine');
   }
 
   // Play arbitrary frequencies with a gain multiplier and start offset.
@@ -76,13 +76,14 @@ export class AudioEngine {
       osc1.type = waveform;
       osc1.frequency.value = freq;
 
+      let warmth = 0;
       let osc2 = null;
       if (useDualOsc) {
         osc2 = this._ctx.createOscillator();
         osc2.type = waveform;
         osc2.frequency.value = freq;
-        osc1.detune.value = -6;
-        osc2.detune.value = 6;
+        osc1.detune.value = -warmth;
+        osc2.detune.value = warmth;
       }
 
       // Low-pass filter
