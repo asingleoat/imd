@@ -328,6 +328,13 @@ document.getElementById('play-btn').addEventListener('click', () => {
   updateChord(true);
 });
 
+document.addEventListener('keydown', (e) => {
+  if (e.code === 'Space' && e.target.tagName !== 'INPUT' && e.target.tagName !== 'TEXTAREA') {
+    e.preventDefault();
+    updateChord(true);
+  }
+});
+
 chordVolume.addEventListener('input', () => {
   chordVolumeLabel.textContent = `${chordVolume.value}%`;
 });
