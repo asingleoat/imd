@@ -47,6 +47,11 @@
       <span>Intermodulation</span>
     </label>
     <label class="toggle">
+      <span>Depth</span>
+      <input type="range" id="depth-slider" min="1" max="5" value="1" step="1">
+      <span id="depth-label">1</span>
+    </label>
+    <label class="toggle">
       <input type="checkbox" id="delay-toggle" checked>
       <span>Delay</span>
     </label>
@@ -64,6 +69,7 @@
   <div id="products-label">Distortion Products</div>
   <div id="keyboard-products"></div>
 
+  <div id="rational-signature"></div>
   <div id="tuning-info">12-TET · A4 = 440 Hz</div>
 
   <script type="module" src="app.js"></script>

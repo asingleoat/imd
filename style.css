@@ -359,10 +359,22 @@ button:active {
   z-index: 3;
 }
 
+/* --- Rational signature --- */
+
+#rational-signature {
+  font-size: 0.85rem;
+  font-family: 'Menlo', 'Consolas', monospace;
+  color: #b0b0d0;
+  margin-top: 1.5rem;
+  min-height: 1.2rem;
+  text-align: center;
+  letter-spacing: 0.05em;
+}
+
 /* --- Tuning --- */
 
 #tuning-info {
   font-size: 0.7rem;
   color: #666;
-  margin-top: 1.5rem;
+  margin-top: 0.5rem;
 }

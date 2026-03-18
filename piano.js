@@ -127,8 +127,8 @@ export class PianoKeyboard {
     this.clearHighlight();
 
     // Group entries by nearest MIDI key, octave-shifting into range if needed
-    const byKey = new Map(); // midi -> { kinds: Set, cents: [], octaveShifts: Set }
-    for (const { freq, kind } of entries) {
+    const byKey = new Map(); // midi -> { kinds: Set, cents: [], octaveShifts: Set, minOrder }
+    for (const { freq, kind, order } of entries) {
       if (freq < 20 || freq > 20000) continue;
       const exactMidi = 69 + 12 * Math.log2(freq / a4);
       let nearestMidi = Math.round(exactMidi);
@@ -142,21 +142,27 @@ export class PianoKeyboard {
       if (!this._keys.has(nearestMidi)) continue;
 
       if (!byKey.has(nearestMidi)) {
-        byKey.set(nearestMidi, { kinds: new Set(), cents: [], octaveShifts: new Set() });
+        byKey.set(nearestMidi, { kinds: new Set(), cents: [], octaveShifts: new Set(), minOrder: Infinity });
       }
       const entry = byKey.get(nearestMidi);
       entry.kinds.add(kind || 'default');
       entry.cents.push(cents);
       if (octaveShift !== 0) entry.octaveShifts.add(octaveShift);
+      if (order != null && order < entry.minOrder) entry.minOrder = order;
     }
 
     // Apply highlights
-    for (const [midi, { kinds, cents, octaveShifts }] of byKey) {
+    for (const [midi, { kinds, cents, octaveShifts, minOrder }] of byKey) {
       const el = this._keys.get(midi);
       el.classList.add('highlighted');
       if (octaveShifts.size > 0) el.classList.add('octave-shifted');
       for (const k of kinds) {
         el.classList.add(`kind-${k}`);
+      }
+
+      // Opacity based on order: order 0 = full, higher = more transparent
+      if (minOrder !== Infinity && minOrder > 0) {
+        el.style.opacity = Math.max(0.25, 1 - minOrder * 0.15);
       }
 
       // Deduplicate cent values for the badge
@@ -186,6 +192,7 @@ export class PianoKeyboard {
   clearHighlight() {
     for (const el of this._keys.values()) {
       el.classList.remove('highlighted', 'root', 'kind-harmonic', 'kind-sum', 'kind-difference', 'octave-shifted');
+      el.style.opacity = '';
       // Remove any cent badges
       el.querySelectorAll('.cent-badge').forEach(b => b.remove());
     }

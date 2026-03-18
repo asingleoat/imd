@@ -6,6 +6,7 @@ import { availableVoicings, applyVoicing } from './voicings.js';
 import { AudioEngine } from './audio.js';
 import { PianoKeyboard, midiToNoteName } from './piano.js';
 import { harmonic, intermodulation } from './distortion.js';
+import { rationalApproximations } from './fraction.js';
 
 // --- State ---
 let currentRoot = 60; // C4
@@ -121,6 +122,9 @@ function updateChord(play = true) {
 
   // Then layer distortion products on top
   updateDistortionProducts(play);
+
+  // Update rational signature
+  updateSignature();
 }
 
 // --- Distortion ---
@@ -131,23 +135,47 @@ const imdToggle = document.getElementById('imd-toggle');
 const delayToggle = document.getElementById('delay-toggle');
 const distortionVolume = document.getElementById('distortion-volume');
 const distortionVolumeLabel = document.getElementById('distortion-volume-label');
+const depthSlider = document.getElementById('depth-slider');
+const depthLabel = document.getElementById('depth-label');
 
 function getDistortionProducts() {
   const doHarmonic = harmonicToggle.checked;
   const doIMD = imdToggle.checked;
   if (!doHarmonic && !doIMD) return [];
 
-  const inputs = currentMidiNotes.map(m => ({ freq: tuning.noteFrequency(m), order: 0 }));
+  const depth = parseInt(depthSlider.value);
+  const fundamentals = currentMidiNotes.map(m => ({ freq: tuning.noteFrequency(m), order: 0, kind: 'harmonic' }));
 
-  let products = [];
-  if (doHarmonic) {
-    const harmonics = harmonic(inputs, 2).filter(p => p.order > 0);
-    products.push(...harmonics);
+  // Track all products across iterations; use a freq key to deduplicate
+  const seen = new Map(); // freq (rounded to 0.1Hz) -> product
+  let currentInputs = fundamentals;
+
+  for (let d = 0; d < depth; d++) {
+    let newProducts = [];
+
+    if (doHarmonic) {
+      const harmonics = harmonic(currentInputs, 2).filter(p => p.order > 0);
+      newProducts.push(...harmonics);
+    }
+    if (doIMD) {
+      newProducts.push(...intermodulation(currentInputs));
+    }
+
+    // Deduplicate: keep the lowest order for each freq
+    const iterNew = [];
+    for (const p of newProducts) {
+      const key = Math.round(p.freq * 10);
+      if (!seen.has(key) || p.order < seen.get(key).order) {
+        seen.set(key, p);
+        iterNew.push(p);
+      }
+    }
+
+    // Next iteration: combine fundamentals + all products so far
+    currentInputs = [...fundamentals, ...seen.values()];
   }
-  if (doIMD) {
-    products.push(...intermodulation(inputs));
-  }
-  return products;
+
+  return [...seen.values()];
 }
 
 function updateDistortionProducts(play = false) {
@@ -167,6 +195,47 @@ function updateDistortionProducts(play = false) {
     const delay = delayToggle.checked ? 0.3 : 0;
     audio.playFrequencies(freqs, gainMul, delay);
   }
+}
+
+// --- Rational signature ---
+const CENTS_THRESHOLD = 5; // accept first approximation within this many cents
+
+function updateSignature() {
+  const el = document.getElementById('rational-signature');
+
+  // Collect all frequencies: chord notes + any active distortion products
+  const chordFreqs = currentMidiNotes.map(m => tuning.noteFrequency(m));
+  const products = getDistortionProducts();
+  const productFreqs = products.map(p => p.freq).filter(f => f >= 20 && f <= 20000);
+
+  const allFreqs = [...chordFreqs, ...productFreqs].sort((a, b) => a - b);
+  if (allFreqs.length === 0) { el.textContent = ''; return; }
+
+  // Deduplicate frequencies that are very close (within 1 cent)
+  const deduped = [allFreqs[0]];
+  for (let i = 1; i < allFreqs.length; i++) {
+    const cents = 1200 * Math.log2(allFreqs[i] / allFreqs[i - 1]);
+    if (Math.abs(cents) > 1) deduped.push(allFreqs[i]);
+  }
+
+  const base = deduped[0];
+  const ratios = deduped.map(f => {
+    const ratio = f / base;
+    if (Math.abs(ratio - 1) < 1e-9) return '1/1';
+
+    // Walk convergents, pick the first one within threshold
+    const approxes = rationalApproximations(ratio);
+    for (const a of approxes) {
+      if (Math.abs(a.error) <= CENTS_THRESHOLD) {
+        return `${a.num}/${a.den}`;
+      }
+    }
+    // Fallback: best available
+    const best = approxes[approxes.length - 1];
+    return `${best.num}/${best.den}`;
+  });
+
+  el.textContent = ratios.join('   ');
 }
 
 // --- Event listeners ---
@@ -197,8 +266,13 @@ document.getElementById('play-btn').addEventListener('click', () => {
 chordVolume.addEventListener('input', () => {
   chordVolumeLabel.textContent = `${chordVolume.value}%`;
 });
-harmonicToggle.addEventListener('change', () => updateDistortionProducts());
-imdToggle.addEventListener('change', () => updateDistortionProducts());
+harmonicToggle.addEventListener('change', () => { updateDistortionProducts(); updateSignature(); });
+imdToggle.addEventListener('change', () => { updateDistortionProducts(); updateSignature(); });
+depthSlider.addEventListener('input', () => {
+  depthLabel.textContent = depthSlider.value;
+  updateDistortionProducts();
+  updateSignature();
+});
 distortionVolume.addEventListener('input', () => {
   distortionVolumeLabel.textContent = `${distortionVolume.value}%`;
 });
