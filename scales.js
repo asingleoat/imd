@@ -35,7 +35,7 @@ export const COMPLEXITIES = [
   { name: 'Quartal 5-note', stackCount: 5, stackType: 'quartal' },
 ];
 
-const DEGREE_NAMES = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII'];
+const DEGREE_NAMES = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X', 'XI', 'XII'];
 
 export { DEGREE_NAMES };
 

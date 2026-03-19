@@ -87,12 +87,23 @@ for (const [i, scale] of SCALES.entries()) {
   scaleSelect.appendChild(opt);
 }
 
-for (const [i, name] of DEGREE_NAMES.entries()) {
-  const opt = document.createElement('option');
-  opt.value = i;
-  opt.textContent = name;
-  degreeSelect.appendChild(opt);
+function refreshDegrees() {
+  const scale = SCALES[parseInt(scaleSelect.value)];
+  const prevValue = degreeSelect.value;
+  degreeSelect.innerHTML = '';
+  for (let i = 0; i < scale.steps.length; i++) {
+    const opt = document.createElement('option');
+    opt.value = i;
+    opt.textContent = DEGREE_NAMES[i] || `${i + 1}`;
+    degreeSelect.appendChild(opt);
+  }
+  if (parseInt(prevValue) < scale.steps.length) {
+    degreeSelect.value = prevValue;
+  } else {
+    degreeSelect.value = 0;
+  }
 }
+refreshDegrees();
 
 for (const [i, c] of COMPLEXITIES.entries()) {
   const opt = document.createElement('option');
@@ -409,6 +420,7 @@ chordSelect.addEventListener('change', () => {
 });
 
 scaleSelect.addEventListener('change', () => {
+  refreshDegrees();
   refreshVoicings();
   updateChord();
 });
