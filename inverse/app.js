@@ -87,6 +87,20 @@ function getDistortionConfig() {
 const solveBtn = document.getElementById('solve-btn');
 const statusEl = document.getElementById('status');
 const modeSelect = document.getElementById('mode-select');
+let lastSolveParams = null;
+
+function getSolveParams() {
+  return JSON.stringify({
+    target: targetSelect.value,
+    mode: modeSelect.value,
+    ...getDistortionConfig(),
+  });
+}
+
+function checkSolveNeeded() {
+  const params = getSolveParams();
+  solveBtn.disabled = params === lastSolveParams;
+}
 
 function solve() {
   const chord = CHORD_TYPES.find(c => c.symbol === targetSelect.value);
@@ -96,7 +110,6 @@ function solve() {
   statusEl.className = 'computing';
   solveBtn.disabled = true;
 
-  // Use setTimeout to let the UI update before blocking computation
   setTimeout(() => {
     const mode = modeSelect.value;
     const results = findInputsForChord(chord.intervals, {
@@ -113,7 +126,8 @@ function solve() {
     });
 
     allResults = results;
-    solveBtn.disabled = false;
+    lastSolveParams = getSolveParams();
+    solveBtn.disabled = true; // stays disabled until params change
     filterResults();
   }, 10);
 }
@@ -335,7 +349,14 @@ document.addEventListener('keydown', (e) => {
 
 document.getElementById('depth-slider').addEventListener('input', (e) => {
   document.getElementById('depth-label').textContent = e.target.value;
+  checkSolveNeeded();
 });
+
+// Re-enable solve when solver-affecting params change
+targetSelect.addEventListener('change', checkSolveNeeded);
+modeSelect.addEventListener('change', checkSolveNeeded);
+document.getElementById('harmonic-toggle').addEventListener('change', checkSolveNeeded);
+document.getElementById('imd-toggle').addEventListener('change', checkSolveNeeded);
 
 document.getElementById('chord-volume').addEventListener('input', (e) => {
   document.getElementById('chord-volume-label').textContent = `${e.target.value}%`;
