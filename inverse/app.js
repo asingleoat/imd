@@ -87,7 +87,10 @@ function getDistortionConfig() {
 const solveBtn = document.getElementById('solve-btn');
 const statusEl = document.getElementById('status');
 const modeSelect = document.getElementById('mode-select');
-let lastSolveParams = null;
+
+// LRU cache of solver results keyed by params
+const LRU_MAX = 10;
+const solveCache = new Map(); // key -> results array (Map preserves insertion order)
 
 function getSolveParams() {
   return JSON.stringify({
@@ -99,12 +102,40 @@ function getSolveParams() {
 
 function checkSolveNeeded() {
   const params = getSolveParams();
-  solveBtn.disabled = params === lastSolveParams;
+  if (solveCache.has(params)) {
+    solveBtn.disabled = true;
+    // Auto-load cached results
+    const cached = solveCache.get(params);
+    solveCache.delete(params);
+    solveCache.set(params, cached);
+    allResults = cached;
+    statusEl.textContent = 'Loaded from cache.';
+    statusEl.className = '';
+    filterResults();
+  } else {
+    solveBtn.disabled = false;
+  }
 }
 
 function solve() {
   const chord = CHORD_TYPES.find(c => c.symbol === targetSelect.value);
   if (!chord) return;
+
+  const params = getSolveParams();
+
+  // Check cache first
+  if (solveCache.has(params)) {
+    // Move to end (most recently used)
+    const cached = solveCache.get(params);
+    solveCache.delete(params);
+    solveCache.set(params, cached);
+    allResults = cached;
+    statusEl.textContent = 'Loaded from cache.';
+    statusEl.className = '';
+    solveBtn.disabled = true;
+    filterResults();
+    return;
+  }
 
   statusEl.textContent = 'Computing...';
   statusEl.className = 'computing';
@@ -125,9 +156,15 @@ function solve() {
       },
     });
 
+    // Store in cache, evict oldest if over limit
+    if (solveCache.size >= LRU_MAX) {
+      const oldest = solveCache.keys().next().value;
+      solveCache.delete(oldest);
+    }
+    solveCache.set(params, results);
+
     allResults = results;
-    lastSolveParams = getSolveParams();
-    solveBtn.disabled = true; // stays disabled until params change
+    solveBtn.disabled = true;
     filterResults();
   }, 10);
 }
@@ -364,6 +401,16 @@ document.getElementById('chord-volume').addEventListener('input', (e) => {
 
 document.getElementById('distortion-volume').addEventListener('input', (e) => {
   document.getElementById('distortion-volume-label').textContent = `${e.target.value}%`;
+});
+
+// Click top keyboard to shift root
+keyboard.onNoteClick((midi) => {
+  keySelect.value = KEY_NOTES.find(k => k.midi % 12 === midi % 12)?.midi ?? keySelect.value;
+  octaveSelect.value = Math.floor(midi / 12) - 1;
+  if (currentResults.length > 0) {
+    displayResult(currentResultIndex);
+    play();
+  }
 });
 
 // --- Initial state ---
