@@ -68,7 +68,7 @@ for (const cat of CATEGORIES) {
   }
   targetSelect.appendChild(group);
 }
-targetSelect.value = 'maj';
+targetSelect.value = 'min7';
 
 // --- Result selector ---
 const resultSelect = document.getElementById('result-select');
