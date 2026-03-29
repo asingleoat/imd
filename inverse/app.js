@@ -175,9 +175,9 @@ function populateResults() {
     const opt = document.createElement('option');
     opt.value = i;
     const labels = r.labels.join(', ');
-    const matchStr = r.matched === r.total ? '✓' : `${r.matched}/${r.total}`;
+    const matchStr = r.matched < r.total ? ` ${r.matched}/${r.total}` : '';
     const scoreStr = isMSE ? r.score.toFixed(1) + '¢²' : String(r.score);
-    opt.textContent = `#${i + 1} [${labels}] ${matchStr} (${scoreStr})`;
+    opt.textContent = `#${i + 1}  ${labels}${matchStr} — ${scoreStr}`;
     resultSelect.appendChild(opt);
   }
 }
