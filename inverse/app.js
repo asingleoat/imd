@@ -84,13 +84,12 @@ function getDistortionConfig() {
 }
 
 // --- Solve ---
-const solveBtn = document.getElementById('solve-btn');
 const statusEl = document.getElementById('status');
 const modeSelect = document.getElementById('mode-select');
 
 // LRU cache of solver results keyed by params
-const LRU_MAX = 10;
-const solveCache = new Map(); // key -> results array (Map preserves insertion order)
+const LRU_MAX = 100;
+const solveCache = new Map();
 
 function getSolveParams() {
   return JSON.stringify({
@@ -101,23 +100,6 @@ function getSolveParams() {
   });
 }
 
-function checkSolveNeeded() {
-  const params = getSolveParams();
-  if (solveCache.has(params)) {
-    solveBtn.disabled = true;
-    // Auto-load cached results
-    const cached = solveCache.get(params);
-    solveCache.delete(params);
-    solveCache.set(params, cached);
-    allResults = cached;
-    statusEl.textContent = 'Loaded from cache.';
-    statusEl.className = '';
-    filterResults();
-  } else {
-    solveBtn.disabled = false;
-  }
-}
-
 function solve() {
   const chord = CHORD_TYPES.find(c => c.symbol === targetSelect.value);
   if (!chord) return;
@@ -126,21 +108,18 @@ function solve() {
 
   // Check cache first
   if (solveCache.has(params)) {
-    // Move to end (most recently used)
     const cached = solveCache.get(params);
     solveCache.delete(params);
     solveCache.set(params, cached);
     allResults = cached;
     statusEl.textContent = 'Loaded from cache.';
     statusEl.className = '';
-    solveBtn.disabled = true;
     filterResults();
     return;
   }
 
   statusEl.textContent = 'Computing...';
   statusEl.className = 'computing';
-  solveBtn.disabled = true;
 
   setTimeout(() => {
     const results = findInputsForChord(chord.intervals, {
@@ -156,7 +135,6 @@ function solve() {
       },
     });
 
-    // Store in cache, evict oldest if over limit
     if (solveCache.size >= LRU_MAX) {
       const oldest = solveCache.keys().next().value;
       solveCache.delete(oldest);
@@ -164,7 +142,6 @@ function solve() {
     solveCache.set(params, results);
 
     allResults = results;
-    solveBtn.disabled = true;
     filterResults();
   }, 10);
 }
@@ -344,13 +321,11 @@ function advanceResult(delta) {
 
 // --- Event listeners ---
 maxNotesFilter.addEventListener('change', filterResults);
-solveBtn.addEventListener('click', solve);
 
 document.getElementById('play-btn').addEventListener('click', play);
 
 document.getElementById('prev-btn').addEventListener('click', () => advanceResult(-1));
 document.getElementById('next-btn').addEventListener('click', () => advanceResult(1));
-scoringSelect.addEventListener('change', checkSolveNeeded);
 
 resultSelect.addEventListener('change', () => {
   displayResult(parseInt(resultSelect.value));
@@ -373,14 +348,15 @@ document.addEventListener('keydown', (e) => {
 
 document.getElementById('depth-slider').addEventListener('input', (e) => {
   document.getElementById('depth-label').textContent = e.target.value;
-  checkSolveNeeded();
+  solve();
 });
 
-// Re-enable solve when solver-affecting params change
-targetSelect.addEventListener('change', checkSolveNeeded);
-modeSelect.addEventListener('change', checkSolveNeeded);
-document.getElementById('harmonic-toggle').addEventListener('change', checkSolveNeeded);
-document.getElementById('imd-toggle').addEventListener('change', checkSolveNeeded);
+// Auto-solve when solver-affecting params change
+targetSelect.addEventListener('change', solve);
+modeSelect.addEventListener('change', solve);
+scoringSelect.addEventListener('change', solve);
+document.getElementById('harmonic-toggle').addEventListener('change', solve);
+document.getElementById('imd-toggle').addEventListener('change', solve);
 
 document.getElementById('chord-volume').addEventListener('input', (e) => {
   document.getElementById('chord-volume-label').textContent = `${e.target.value}%`;
@@ -401,4 +377,4 @@ keyboard.onNoteClick((midi) => {
 });
 
 // --- Initial state ---
-statusEl.textContent = 'Press Solve to find input notes for the target chord.';
+solve();
