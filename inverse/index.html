@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>IMD Inverse — Chord Function Synthesis</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <h1>IMD Inverse — Chord Function Synthesis</h1>
+  <p class="subtitle">Select a target chord. The inverse solver finds which notes to play so that
+    their intermodulation products produce that chord.</p>
+
+  <div id="controls">
+    <div class="control-group">
+      <label for="key-select">Key</label>
+      <select id="key-select"></select>
+    </div>
+    <div class="control-group">
+      <label for="octave-select">Octave</label>
+      <select id="octave-select"></select>
+    </div>
+    <div class="control-group">
+      <label for="target-select">Target Chord</label>
+      <select id="target-select"></select>
+    </div>
+    <div class="control-group">
+      <label for="mode-select">Solver</label>
+      <select id="mode-select">
+        <option value="just">Just Intonation</option>
+        <option value="tet">12-TET</option>
+      </select>
+    </div>
+    <div class="control-group">
+      <label for="result-select">Result</label>
+      <select id="result-select"></select>
+    </div>
+    <div class="control-group">
+      <label>&nbsp;</label>
+      <button id="solve-btn">Solve</button>
+    </div>
+    <div class="control-group">
+      <label>&nbsp;</label>
+      <button id="play-btn">Play</button>
+    </div>
+  </div>
+
+  <div id="status"></div>
+
+  <div id="distortion-controls">
+    <label class="toggle">
+      <input type="checkbox" id="harmonic-toggle" checked>
+      <span>Harmonics</span>
+    </label>
+    <label class="toggle">
+      <input type="checkbox" id="imd-toggle" checked>
+      <span>Intermodulation</span>
+    </label>
+    <label class="toggle">
+      <span>Depth</span>
+      <input type="range" id="depth-slider" min="1" max="3" value="1" step="1">
+      <span id="depth-label">1</span>
+    </label>
+    <label class="toggle">
+      <span>Chord vol</span>
+      <input type="range" id="chord-volume" min="0" max="200" value="100" step="5">
+      <span id="chord-volume-label">100%</span>
+    </label>
+    <label class="toggle">
+      <input type="checkbox" id="delay-toggle" checked>
+      <span>Delay</span>
+    </label>
+    <label class="toggle">
+      <span>Products vol</span>
+      <input type="range" id="distortion-volume" min="0" max="200" value="60" step="5">
+      <span id="distortion-volume-label">60%</span>
+    </label>
+  </div>
+
+  <div id="chord-display"></div>
+  <div id="notes-display"></div>
+
+  <div id="input-label">Input Notes</div>
+  <div id="keyboard"></div>
+
+  <div id="products-label">Distortion Products</div>
+  <div id="keyboard-products"></div>
+
+  <div id="match-info"></div>
+
+  <script type="module" src="app.js"></script>
+</body>
+</html>
