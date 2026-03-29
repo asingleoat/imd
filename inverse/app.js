@@ -106,7 +106,7 @@ function solve() {
       distortionConfig: getDistortionConfig(),
       toleranceCents: 10,
       maxDen: 64,
-      maxResults: 200,
+      maxResults: Infinity,
       onProgress: (done, total) => {
         statusEl.textContent = `Computing... ${done}/${total}`;
       },
@@ -122,7 +122,7 @@ const maxNotesFilter = document.getElementById('max-notes-filter');
 
 function filterResults() {
   const maxNotes = parseInt(maxNotesFilter.value);
-  currentResults = allResults.filter(r => r.ratios.length <= maxNotes);
+  currentResults = allResults.filter(r => r.ratios.length <= maxNotes).slice(0, 50);
   currentResultIndex = 0;
   populateResults();
   if (currentResults.length > 0) {
@@ -284,10 +284,8 @@ function play() {
 function advanceResult(delta) {
   if (currentResults.length === 0) return;
   const next = Math.max(0, Math.min(currentResults.length - 1, currentResultIndex + delta));
-  if (next !== currentResultIndex) {
-    displayResult(next);
-    play();
-  }
+  displayResult(next);
+  play();
 }
 
 // --- Event listeners ---
