@@ -326,6 +326,13 @@ button:disabled { background: #2a2a3a; color: #666; cursor: default; }
   border-color: #6a6050;
 }
 
+/* Target-matching products get a bright green outline */
+#keyboard-products .piano-key.target-match {
+  outline: 3px solid #50e050;
+  outline-offset: -3px;
+  z-index: 3;
+}
+
 #keyboard-products .piano-key.octave-shifted {
   border-style: dashed;
   border-width: 2px;

@@ -6,6 +6,7 @@ import { AudioEngine } from '../lib/audio.js';
 import { PianoKeyboard, midiToNoteName } from '../lib/piano.js';
 import { harmonic, intermodulation } from '../lib/distortion.js';
 import { findInputsForChord } from '../lib/inverse.js';
+import { semitonesToJIRatios } from '../lib/ratios.js';
 
 // --- State ---
 const tuning = equalTemperament(440);
@@ -240,6 +241,19 @@ function displayResult(index) {
     currentInputs = [...inputs, ...seen.values()];
   }
   products = [...seen.values()];
+
+  // Mark products that match target intervals
+  if (chord) {
+    const targetRatios = semitonesToJIRatios(chord.intervals);
+    const rootFreq = tuning.noteFrequency(rootMidi);
+    for (const p of products) {
+      const ratio = p.freq / rootFreq;
+      p.target = targetRatios.some(t => {
+        const cents = 1200 * Math.log2(ratio / t.value);
+        return Math.abs(cents) < 50;
+      });
+    }
+  }
 
   if (products.length > 0) {
     productsKeyboard.highlightFrequencies(products);
