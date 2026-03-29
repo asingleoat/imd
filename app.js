@@ -1,13 +1,13 @@
 // app.js — Orchestrator: wires UI controls to chord/voicing/audio/piano modules
 
-import { equalTemperament, justIntonation } from './tuning.js';
-import { CHORD_TYPES, CATEGORIES, chordsByCategory, identifyChord } from './chords.js';
-import { availableVoicings, applyVoicing } from './voicings.js';
-import { AudioEngine } from './audio.js';
-import { PianoKeyboard, midiToNoteName } from './piano.js';
-import { harmonic, intermodulation } from './distortion.js';
-import { rationalApproximations } from './fraction.js';
-import { SCALES, COMPLEXITIES, DEGREE_NAMES, diatonicChord } from './scales.js';
+import { equalTemperament, justIntonation } from './lib/tuning.js';
+import { CHORD_TYPES, CATEGORIES, chordsByCategory, identifyChord } from './lib/chords.js';
+import { availableVoicings, applyVoicing } from './lib/voicings.js';
+import { AudioEngine } from './lib/audio.js';
+import { PianoKeyboard, midiToNoteName } from './lib/piano.js';
+import { harmonic, intermodulation } from './lib/distortion.js';
+import { rationalApproximations } from './lib/fraction.js';
+import { SCALES, COMPLEXITIES, DEGREE_NAMES, diatonicChord } from './lib/scales.js';
 
 // --- State ---
 let currentRoot = 60; // C4
