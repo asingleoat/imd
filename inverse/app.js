@@ -119,10 +119,22 @@ function solve() {
 }
 
 const maxNotesFilter = document.getElementById('max-notes-filter');
+const scoringSelect = document.getElementById('scoring-select');
+
+function getActiveScoring(r) {
+  if (scoringSelect.value === 'mse') return r.mse;
+  return r.barcode;
+}
 
 function filterResults() {
   const maxNotes = parseInt(maxNotesFilter.value);
-  currentResults = allResults.filter(r => r.ratios.length <= maxNotes).slice(0, 50);
+  const useBarcode = scoringSelect.value === 'barcode';
+
+  const filtered = allResults.filter(r => r.ratios.length <= maxNotes);
+  filtered.sort((a, b) =>
+    useBarcode ? a.barcodeScore - b.barcodeScore : a.mseScore - b.mseScore
+  );
+  currentResults = filtered.slice(0, 50);
   currentResultIndex = 0;
   populateResults();
   if (currentResults.length > 0) {
@@ -132,20 +144,23 @@ function filterResults() {
     productsKeyboard.clearHighlight();
     document.getElementById('match-info').innerHTML = '';
   }
-  const exact = currentResults.filter(r => r.matched === r.total).length;
+  const exact = currentResults.filter(r => getActiveScoring(r).matched === getActiveScoring(r).total).length;
   statusEl.textContent = `Showing ${currentResults.length} results (${exact} exact) of ${allResults.length} total`;
   statusEl.className = '';
 }
 
 function populateResults() {
   resultSelect.innerHTML = '';
+  const useBarcode = scoringSelect.value === 'barcode';
   for (let i = 0; i < currentResults.length; i++) {
     const r = currentResults[i];
+    const scoring = getActiveScoring(r);
     const opt = document.createElement('option');
     opt.value = i;
     const labels = r.labels.join(', ');
-    const matchStr = r.matched === r.total ? '✓' : `${r.matched}/${r.total}`;
-    opt.textContent = `#${i + 1} [${labels}] ${matchStr} (score ${r.score})`;
+    const matchStr = scoring.matched === scoring.total ? '✓' : `${scoring.matched}/${scoring.total}`;
+    const scoreStr = useBarcode ? scoring.score : scoring.score.toFixed(1) + '¢²';
+    opt.textContent = `#${i + 1} [${labels}] ${matchStr} (${scoreStr})`;
     resultSelect.appendChild(opt);
   }
 }
@@ -217,16 +232,17 @@ function displayResult(index) {
   }
 
   // Match info
+  const scoring = getActiveScoring(result);
   const matchEl = document.getElementById('match-info');
   const parts = [];
-  if (result.matchedKeys.length) {
-    parts.push(`<span class="matched">Matched: ${result.matchedKeys.join('  ')}</span>`);
+  if (scoring.matchedKeys.length) {
+    parts.push(`<span class="matched">Matched: ${scoring.matchedKeys.join('  ')}</span>`);
   }
-  if (result.missingKeys.length) {
-    parts.push(`<span class="missing">Missing: ${result.missingKeys.join('  ')}</span>`);
+  if (scoring.missingKeys.length) {
+    parts.push(`<span class="missing">Missing: ${scoring.missingKeys.join('  ')}</span>`);
   }
-  if (result.extraKeys.length) {
-    parts.push(`<span class="extra">Extra: ${result.extraKeys.join('  ')}</span>`);
+  if (scoring.extraKeys && scoring.extraKeys.length) {
+    parts.push(`<span class="extra">Extra: ${scoring.extraKeys.join('  ')}</span>`);
   }
   matchEl.innerHTML = parts.join('<br>');
 }
@@ -296,6 +312,7 @@ document.getElementById('play-btn').addEventListener('click', play);
 
 document.getElementById('prev-btn').addEventListener('click', () => advanceResult(-1));
 document.getElementById('next-btn').addEventListener('click', () => advanceResult(1));
+scoringSelect.addEventListener('change', () => { if (allResults.length) filterResults(); });
 
 resultSelect.addEventListener('change', () => {
   displayResult(parseInt(resultSelect.value));
