@@ -13,7 +13,8 @@ const audio = new AudioEngine(tuning);
 const keyboard = new PianoKeyboard(document.getElementById('keyboard'));
 const productsKeyboard = new PianoKeyboard(document.getElementById('keyboard-products'));
 
-let currentResults = [];
+let allResults = [];       // full unfiltered results
+let currentResults = [];   // filtered view
 let currentResultIndex = 0;
 let currentKeyMidi = 60; // C4
 
@@ -105,20 +106,35 @@ function solve() {
       distortionConfig: getDistortionConfig(),
       toleranceCents: 10,
       maxDen: 64,
-      maxResults: 20,
+      maxResults: 200,
       onProgress: (done, total) => {
         statusEl.textContent = `Computing... ${done}/${total}`;
       },
     });
 
-    currentResults = results;
-    currentResultIndex = 0;
-    populateResults();
-    displayResult(0);
+    allResults = results;
     solveBtn.disabled = false;
-    statusEl.textContent = `Found ${results.length} results (${results.filter(r => r.matched === r.total).length} exact matches)`;
-    statusEl.className = '';
+    filterResults();
   }, 10);
+}
+
+const maxNotesFilter = document.getElementById('max-notes-filter');
+
+function filterResults() {
+  const maxNotes = parseInt(maxNotesFilter.value);
+  currentResults = allResults.filter(r => r.ratios.length <= maxNotes);
+  currentResultIndex = 0;
+  populateResults();
+  if (currentResults.length > 0) {
+    displayResult(0);
+  } else {
+    keyboard.clearHighlight();
+    productsKeyboard.clearHighlight();
+    document.getElementById('match-info').innerHTML = '';
+  }
+  const exact = currentResults.filter(r => r.matched === r.total).length;
+  statusEl.textContent = `Showing ${currentResults.length} results (${exact} exact) of ${allResults.length} total`;
+  statusEl.className = '';
 }
 
 function populateResults() {
@@ -264,19 +280,41 @@ function play() {
   }
 }
 
+// --- Navigation ---
+function advanceResult(delta) {
+  if (currentResults.length === 0) return;
+  const next = Math.max(0, Math.min(currentResults.length - 1, currentResultIndex + delta));
+  if (next !== currentResultIndex) {
+    displayResult(next);
+    play();
+  }
+}
+
 // --- Event listeners ---
+maxNotesFilter.addEventListener('change', filterResults);
 solveBtn.addEventListener('click', solve);
 
 document.getElementById('play-btn').addEventListener('click', play);
 
+document.getElementById('prev-btn').addEventListener('click', () => advanceResult(-1));
+document.getElementById('next-btn').addEventListener('click', () => advanceResult(1));
+
 resultSelect.addEventListener('change', () => {
   displayResult(parseInt(resultSelect.value));
+  play();
 });
 
 document.addEventListener('keydown', (e) => {
-  if (e.code === 'Space' && e.target.tagName !== 'INPUT' && e.target.tagName !== 'TEXTAREA') {
+  if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+  if (e.code === 'Space') {
     e.preventDefault();
     play();
+  } else if (e.code === 'ArrowLeft') {
+    e.preventDefault();
+    advanceResult(-1);
+  } else if (e.code === 'ArrowRight') {
+    e.preventDefault();
+    advanceResult(1);
   }
 });
 

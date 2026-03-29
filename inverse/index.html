@@ -32,8 +32,21 @@
       </select>
     </div>
     <div class="control-group">
+      <label for="max-notes-filter">Max Notes</label>
+      <select id="max-notes-filter">
+        <option value="1">1</option>
+        <option value="2">2</option>
+        <option value="3">3</option>
+        <option value="4" selected>4</option>
+      </select>
+    </div>
+    <div class="control-group">
       <label for="result-select">Result</label>
-      <select id="result-select"></select>
+      <div class="result-nav">
+        <button id="prev-btn" class="nav-btn">◀</button>
+        <select id="result-select"></select>
+        <button id="next-btn" class="nav-btn">▶</button>
+      </div>
     </div>
     <div class="control-group">
       <label>&nbsp;</label>

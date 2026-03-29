@@ -80,6 +80,18 @@ button:hover { background: #4a4a8a; }
 button:active { background: #5a5aaa; }
 button:disabled { background: #2a2a3a; color: #666; cursor: default; }
 
+.result-nav {
+  display: flex;
+  gap: 0.3rem;
+  align-items: center;
+}
+
+.nav-btn {
+  padding: 0.5rem 0.6rem;
+  font-size: 0.8rem;
+  min-width: unset;
+}
+
 /* --- Status --- */
 
 #status {
