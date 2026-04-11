@@ -92,11 +92,15 @@ const modeSelect = document.getElementById('mode-select');
 const LRU_MAX = 100;
 const solveCache = new Map();
 
+const extraPenaltySlider = document.getElementById('extra-penalty');
+const extraPenaltyLabel = document.getElementById('extra-penalty-label');
+
 function getSolveParams() {
   return JSON.stringify({
     target: targetSelect.value,
     mode: modeSelect.value,
     scoring: scoringSelect.value,
+    extraPenalty: parseInt(extraPenaltySlider.value),
     ...getDistortionConfig(),
   });
 }
@@ -131,6 +135,7 @@ function solve() {
       distortionConfig: getDistortionConfig(),
       toleranceCents: 10,
       maxDen: 64,
+      extraPenalty: parseInt(extraPenaltySlider.value),
       onProgress: (done, total) => {
         statusEl.textContent = `Computing... ${done}/${total}`;
       },
@@ -370,6 +375,10 @@ targetSelect.addEventListener('change', solve);
 modeSelect.addEventListener('change', solve);
 scoringSelect.addEventListener('change', solve);
 document.getElementById('harmonic-toggle').addEventListener('change', solve);
+extraPenaltySlider.addEventListener('input', (e) => {
+  extraPenaltyLabel.textContent = e.target.value;
+  solve();
+});
 document.getElementById('imd-toggle').addEventListener('change', solve);
 
 document.getElementById('chord-volume').addEventListener('input', (e) => {
